@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import {filterImageFromURL, deleteLocalFiles, filterImageFromUrlMAS} from './util/util';
 
 (async () => {
 
@@ -33,16 +33,19 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
     // Check if user has passed the url. if true process if not return response with 422 error
     if (image_url) {
       console.log("User has provided Image URl")
+      const imagePath = await filterImageFromUrlMAS(image_url)
 
-      const imagePath = await filterImageFromURL(image_url)
-
+      if (imagePath === "error"){
+        // Send error response to user if could not process image
+        response.status(500).send("Sorry server could not read the image properly. Try again or  another URL")
+      }
+    // Respond to user with image when image processing is finished
       response.status(200).sendFile(imagePath, function (){
+        // Delete all the temporary files in th tmp folder
         deleteLocalFiles([imagePath])
       })
-
-
     } else {
-      return response.status(422).send("Sorry can't process image,URl is missing")
+       response.status(422).send("Sorry can't process image,URl is missing")
     }
 
   });
