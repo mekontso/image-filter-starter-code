@@ -9,7 +9,7 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   // Set the network port
   const port = process.env.PORT || 8082;
-  
+
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
 
@@ -28,15 +28,33 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
+  app.get("/filteredimage", async (request, response) => {
+    let {image_url} = request.query
+    // Check if user has passed the url. if true process if not return response with 422 error
+    if (image_url) {
+      console.log("User has provided Image URl")
+
+      const imagePath = await filterImageFromURL(image_url)
+
+      response.status(200).sendFile(imagePath, function (){
+        deleteLocalFiles([imagePath])
+      })
+
+
+    } else {
+      return response.status(422).send("Sorry can't process image,URl is missing")
+    }
+
+  });
 
   //! END @TODO1
-  
+
   // Root Endpoint
   // Displays a simple message to the user
   app.get( "/", async ( req, res ) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
-  
+
 
   // Start the Server
   app.listen( port, () => {
